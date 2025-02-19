@@ -1,6 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
 import { Alert, Pressable, StyleSheet, Text, View, } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
 import react, { useState, useEffect } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,6 +10,8 @@ import MapView, { Marker } from 'react-native-maps';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Entypo from '@expo/vector-icons/Entypo';
+import { addTodo, useFireTodos } from './firebase/FirestoreController'
+import {Button, MD3LightTheme, PaperProvider, TextInput } from 'react-native-paper';
 
 
 
@@ -53,14 +54,55 @@ function LocationsScreen() {
 
 function AddLocationScreen() {
 
+    const [todo, setTodo] = useState('');
+    const todos = useFireTodos();
 
 
   return (
 
-    <Text variant='displayMedium'>Add Locations</Text>
+    
+
+    <PaperProvider>
+      <SafeAreaView style={styles.container}>
+        <Text variant='headlineMedium'>
+          Locations list ({todos ? todos.length : 0})
+        </Text>
+        <TextInput
+        label={'New location'}
+        value={todo}
+        onChangeText={setTodo}
+        right={
+          <TextInput.Icon
+          icon={'plus-circle'}
+          onPress={()=> addTodo(todo)}
+          size={32}
+          color={MD3LightTheme.colors.primary}
+          />
+        }
+        />
+      </SafeAreaView>
+    </PaperProvider>
 
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function MapScreen() {
