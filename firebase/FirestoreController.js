@@ -1,6 +1,6 @@
 import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { db, TODOS_REF } from "./config";
+import { db, TODOS_REF } from "./config.js";
 
 
 
@@ -22,8 +22,8 @@ export function useFireTodos(){
     return todos;
 }
 
-export function addTodo(todoText){
-    addDoc( collection(db, TODOS_REF), {done: false, todoText } )
+export function addTodo(todoText, stars = 0, review){
+    addDoc( collection(db, TODOS_REF), {todoText, stars, review} )
         .catch(error => console.log(error.message));
 }
 
