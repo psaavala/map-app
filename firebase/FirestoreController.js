@@ -6,24 +6,26 @@ import { db, TODOS_REF } from "./config.js";
 
 
 
-export function useFireTodos(){
+export function useFireTodos() {
     const [todos, setTodos] = useState([]);
 
-    useEffect(()=>{
+    useEffect(() => {
         const q = query(collection(db, TODOS_REF), orderBy('todoText'));
 
         onSnapshot(q, querySnaphot => {
-            setTodos( querySnaphot.docs.map(doc => {
+            setTodos(querySnaphot.docs.map(doc => {
                 return { id: doc.id, ...doc.data() }
             }));
-        } );
+        });
     }, []);
 
     return todos;
 }
 
-export function addTodo(todoText, stars = 0, review){
-    addDoc( collection(db, TODOS_REF), {todoText, stars, review} )
+export function addTodo(todoText, stars = 0, review, location) {
+    addDoc(collection(db, TODOS_REF), { todoText, stars, review, location: location
+        ? { latitude: location.latitude, longitude: location.longitude }
+        : null, })
         .catch(error => console.log(error.message));
 }
 
