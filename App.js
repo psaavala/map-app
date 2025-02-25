@@ -42,6 +42,8 @@ export default function App() {
   );
 }
 
+/**************************************** */
+
 function LocationsScreen() {
 
   const todos = useFireTodos();
@@ -67,6 +69,7 @@ function LocationsScreen() {
 }
 
 function TodoItem({ todoItem }) {
+  
   const navigation = useNavigation();
 
   function goToMap() {
@@ -96,7 +99,7 @@ function TodoItem({ todoItem }) {
 }
 
 
-
+/*****************************************************************/
 
 export function AddLocationScreen() {
   const [todoText, setTodoText] = useState('');
@@ -185,7 +188,7 @@ export function AddLocationScreen() {
 }
 
 
-
+/*************************************************************************/
 
 
 export function MapScreen({ route }) {
@@ -254,8 +257,7 @@ export function MapScreen({ route }) {
 
 
 
-
-
+/**************************************************************************/
 
 
 
@@ -271,6 +273,13 @@ function CapitalScreen() {
     </Pressable>
   );
 }
+
+/**************************************************************************/
+
+
+
+
+
 
 
 const styles = StyleSheet.create({
