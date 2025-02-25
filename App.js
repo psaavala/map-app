@@ -34,7 +34,6 @@ export default function App() {
         <Stack.Screen name="Map"
           component={MapScreen}
           options={{ tabBarIcon: () => <Entypo name="map" size={24} color="black" /> }} />
-
         <Stack.Screen name="Capitals"
           component={CapitalScreen}
           options={{ tabBarIcon: () => <FontAwesome5 name="city" size={24} color="black" /> }} />
@@ -46,7 +45,7 @@ export default function App() {
 function LocationsScreen() {
 
   const todos = useFireTodos();
-  console.log("Todos from firestore:", todos);
+  
 
 
 
@@ -68,40 +67,84 @@ function LocationsScreen() {
 }
 
 function TodoItem({ todoItem }) {
+  const navigation = useNavigation();
+
+  function goToMap() {
+    if (todoItem.location) {
+      navigation.navigate('Map', { location: todoItem.location });
+    }
+  }
+
   return (
     <View style={styles.card}>
-      
       <View style={styles.header}>
-        <Text variant="titleLarge" style={styles.title}>{todoItem.todoText}</Text>
-        <Entypo name="location-pin" size={24} color="red" />
+        <Text style={styles.title}>{todoItem.todoText}</Text>
+
+        {todoItem.location ? (
+          <Pressable onPress={goToMap}>
+            <Entypo name="location-pin" size={24} color="red" />
+          </Pressable>
+        ) : (
+          <Entypo name="location-pin" size={24} color="gray" />
+        )}
       </View>
 
-      
-      <Text variant="bodyMedium" style={styles.review}>{todoItem.review}</Text>
-
-      
+      <Text style={styles.review}>{todoItem.review}</Text>
       <StarRating rating={todoItem.stars} onChange={() => {}} starSize={24} color="gold" />
     </View>
   );
 }
 
-function AddLocationScreen() {
 
-  const [todo, setTodo] = useState('');
+
+
+export function AddLocationScreen() {
+  const [todoText, setTodoText] = useState('');
   const [stars, setStars] = useState(0);
-  const todos = useFireTodos();
   const [review, setReview] = useState('');
+  
 
-    function handleAddTodo(){
+  
+  async function handleAddTodo() {
+    if (!todoText) {
+      Alert.alert('No location', 'Please type a location first.');
+      return;
+    }
 
-      addTodo(todo, stars, review)
-      setTodo('');
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Cannot geocode without location permission.');
+      return;
+    }
+    
+
+    try {
+     
+      const geoResults = await Location.geocodeAsync(todoText);
+      if (!geoResults.length) {
+        Alert.alert('Not found', 'Could not find that location.');
+        return;
+      }
+
+     
+      const { latitude, longitude } = geoResults[0];
+
+    
+      addTodo(todoText, stars, review, { latitude, longitude });
+
+     
+      setTodoText('');
       setStars(0);
       setReview('');
+      
 
-      Alert.alert("Success", "Location added successfully!");
+      Alert.alert('Success', 'Location added successfully!');
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Something went wrong while geocoding.');
+    }
   }
-    
 
 
   return (
@@ -111,8 +154,8 @@ function AddLocationScreen() {
         
         <TextInput
           label={'Add new location'}
-          value={todo}
-          onChangeText={setTodo}
+          value={todoText}
+          onChangeText={setTodoText}
         />
         <TextInput
           label={'Add review text'}
@@ -145,60 +188,75 @@ function AddLocationScreen() {
 
 
 
-function MapScreen() {
+export function MapScreen({ route }) {
+  const [loc, setLoc] = useState({
+    
+    lat: 65.08,
+    lon: 25.48
+  });
 
-
-
-  const [loc, setLoc] = useState({ lat: 65.0800, lon: 25.4800 });
   const [place, setPlace] = useState('');
 
   useEffect(() => {
-    getLocation();
-    async function getLocation() {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== 'granted') {
-        console.log('Permission to access location was denied');
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
-      setLoc({ lat: location.coords.latitude, lon: location.coords.longitude });
+   
+    if (route.params?.location) {
+      const { latitude, longitude } = route.params.location;
+      setLoc({ lat: latitude, lon: longitude });
     }
-  }, []);
+    
+  }, [route.params]);
 
+ 
   async function search() {
-    let coords = await Location.geocodeAsync(place);
-    if (coords[0]) {
-      setLoc({ lat: coords[0].latitude, lon: coords[0].longitude });
-    } else {
-      Alert.alert('Location not found!!');
+    if (!place) return;
+    try {
+      const coords = await Location.geocodeAsync(place);
+      if (coords[0]) {
+        setLoc({ lat: coords[0].latitude, lon: coords[0].longitude });
+      } else {
+        Alert.alert('Location not found!!');
+      }
+    } catch (err) {
+      Alert.alert('Error', err.message);
     }
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <TextInput value={place} onChangeText={setPlace} />
+    <SafeAreaView style={{ flex: 1 }}>
+      
+      <TextInput
+        label="Search location"
+        value={place}
+        onChangeText={setPlace}
+      />
       <Button onPress={search}>Search</Button>
+
       <MapView
-        style={styles.map}
+        style={{ flex: 1 }}
         region={{
           latitude: loc.lat,
           longitude: loc.lon,
           latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421
+          longitudeDelta: 0.0421,
         }}
       >
-        {place !== '' &&
-          <Marker
-            title={place}
-            coordinate={{ latitude: loc.lat, longitude: loc.lon }}
-          />
-        }
+        <Marker
+          coordinate={{ latitude: loc.lat, longitude: loc.lon }}
+          title="Location"
+        />
       </MapView>
     </SafeAreaView>
   );
 }
+
+
+
+
+
+
+
+
+
 
 
 
